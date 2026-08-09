@@ -4,6 +4,7 @@ import cors from "cors";
 import { voteService } from "./services";
 import voteRoutes from "./routes/vote.routes";
 import authRoutes from "./routes/auth.routes";
+import mailRouter from "./routes/mail.routes";
 
 const app = express();
 
@@ -29,6 +30,10 @@ app.get("/", (_req, res) => {
   message: "Maatdaan API running"
 });
 });
+
+
+//MailRouter for test
+app.use('/api/mail', mailRouter);
 
 
 async function startServer() {
