@@ -84,6 +84,7 @@ export const loginUser = async (
   req: Request,
   res: Response
 ): Promise<void> => {
+  const role = "user";
   try {
     const { email, password } = req.body;
 
@@ -127,7 +128,7 @@ export const loginUser = async (
     const jwtToken = signToken({
       userId: user.userId,
       email: user.email,
-      role: user.role,
+      role: role,
     });
 
     res.status(200).json({

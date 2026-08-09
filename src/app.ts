@@ -38,7 +38,7 @@ async function startServer() {
     console.log('Connected to Hyperledger Fabric');
 
     const server = app.listen(process.env.APP_PORT, () => {
-      console.log('Server running on port 5000');
+      console.log(`Server running on port ${process.env.APP_PORT}`);
     });
 
     const shutdown = () => {
