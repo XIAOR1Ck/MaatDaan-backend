@@ -4,7 +4,7 @@ import { connect, Gateway, Identity, Signer, signers } from '@hyperledger/fabric
 import * as crypto from 'node:crypto';
 import * as fs from 'node:fs/promises';
 import * as path from 'node:path';
-import { OrgConfig, channelName, chaincodeName } from '../config/connections';
+import { OrgConfig, channelName, chaincodeName } from './connections';
 
 export class FabricConnection {
     private client!: grpc.Client;

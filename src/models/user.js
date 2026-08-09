@@ -4,12 +4,7 @@ const { Model } = require('sequelize');
 
 module.exports = (sequelize, DataTypes) => {
   class User extends Model {
-static associate(models) {
-  User.hasMany(models.UserWebAuthn, {
-    foreignKey: 'userId',
-    as: 'webauthnCredentials',
-  });
-}
+
 }
 
   User.init(

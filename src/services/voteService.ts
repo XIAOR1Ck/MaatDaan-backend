@@ -1,7 +1,7 @@
 // src/services/voteService.ts
 
 import { FabricConnection } from './fabricGateway';
-import { orgConfigs } from '../config/connections';
+import { orgConfigs } from './connections';
 
 export class VoteService {
   private connection = new FabricConnection();

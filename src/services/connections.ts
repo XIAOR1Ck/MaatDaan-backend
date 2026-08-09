@@ -10,7 +10,7 @@ export interface OrgConfig {
     tlsCertPath: string;
 }
 
-const cryptoRoot = path.resolve(__dirname, '../organizations/peerOrganizations');
+const cryptoRoot = path.resolve(__dirname, '../../../organizations/peerOrganizations');
 
 export const orgConfigs: Record<string, OrgConfig> = {
     pollingStation: {

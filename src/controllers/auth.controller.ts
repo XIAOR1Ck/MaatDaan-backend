@@ -4,7 +4,6 @@ import crypto from 'crypto';
 import { signToken } from '../utils/generateToken';
 import * as db from '../models';
 const { User , EmailVerification } = db as any;
-import { JwtPayload } from '../utils/generateToken';
 
 export const createUser = async (
   req: Request,
@@ -81,4 +80,73 @@ export const createUser = async (
   }
 };
 
+export const loginUser = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  try {
+    const { email, password } = req.body;
+
+    if (!email || !password) {
+      res.status(400).json({
+        success: false,
+        message: 'Email and password are required',
+      });
+      return;
+    }
+
+    const user = await User.findOne({ where: { email } });
+
+    if (!user) {
+      res.status(401).json({
+        success: false,
+        message: 'Invalid email or password',
+      });
+      return;
+    }
+
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+
+    if (!isPasswordValid) {
+      res.status(401).json({
+        success: false,
+        message: 'Invalid email or password',
+      });
+      return;
+    }
+
+    // Optional: block login until email is verified
+    if (!user.isVerified) {
+      res.status(403).json({
+        success: false,
+        message: 'Please verify your email before logging in',
+      });
+      return;
+    }
+
+    const jwtToken = signToken({
+      userId: user.userId,
+      email: user.email,
+      role: user.role,
+    });
+
+    res.status(200).json({
+      success: true,
+      message: 'Login successful',
+      token: jwtToken,
+      data: {
+        userId: user.userId,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+      },
+    });
+  } catch (error) {
+    console.error('Login error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to log in',
+    });
+  }
+};
 

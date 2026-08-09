@@ -1,4 +1,5 @@
 import express from "express";
+import 'dotenv/config';
 import cors from "cors";
 import { voteService } from "./services";
 import voteRoutes from "./routes/vote.routes";
@@ -36,7 +37,7 @@ async function startServer() {
 
     console.log('Connected to Hyperledger Fabric');
 
-    const server = app.listen(5000, () => {
+    const server = app.listen(9090, () => {
       console.log('Server running on port 5000');
     });
 
