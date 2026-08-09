@@ -1,4 +1,3 @@
-// src/routes/voteRoutes.ts
 
 import { Router } from 'express';
 

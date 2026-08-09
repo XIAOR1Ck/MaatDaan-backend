@@ -1,7 +1,8 @@
 import express from "express";
 import cors from "cors";
 import { voteService } from "./services";
-import voteRoutes from "./routes/voteRoutes";
+import voteRoutes from "./routes/vote.routes";
+import authRoutes from "./routes/auth.routes";
 
 const app = express();
 
@@ -17,6 +18,9 @@ credentials: true,
 // voting routes
 //
 app.use('/api/votes', voteRoutes);
+
+//Auth Routes
+app.use('/api/auth', authRoutes);
 
 app.get("/", (_req, res) => {
   res.json({
