@@ -1,4 +1,4 @@
-// src/config/connection.ts
+// src/config/connections.ts
 import * as path from 'node:path';
 
 export interface OrgConfig {
@@ -10,11 +10,11 @@ export interface OrgConfig {
     tlsCertPath: string;
 }
 
-const cryptoRoot = path.resolve(__dirname, '/../../organizations/peerOrganizations');
+const cryptoRoot = path.resolve(__dirname, '../organizations/peerOrganizations');
 
 export const orgConfigs: Record<string, OrgConfig> = {
     pollingStation: {
-        mspId: 'PollingStation1MSP',
+        mspId: 'PollingStationMSP',
         peerEndpoint: 'localhost:11051',
         peerHostAlias: 'peer0.pollingstation.example.com',
         certPath: path.join(cryptoRoot, 'pollingstation.example.com/users/User1@pollingstation.example.com/msp/signcerts'),
@@ -40,4 +40,4 @@ export const orgConfigs: Record<string, OrgConfig> = {
 };
 
 export const channelName = 'votingchannel';
-export const chaincodeName = 'voting';
+export const chaincodeName = 'maatdaan';

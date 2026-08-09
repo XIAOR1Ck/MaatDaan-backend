@@ -1,36 +1,100 @@
 // src/services/voteService.ts
+
 import { FabricConnection } from './fabricGateway';
 import { orgConfigs } from '../config/connections';
 
 export class VoteService {
-    private connection = new FabricConnection();
+  private connection = new FabricConnection();
 
-    async init(org: keyof typeof orgConfigs = 'org1') {
-        await this.connection.connect(orgConfigs[org]);
-    }
+  async init(org: keyof typeof orgConfigs = 'pollingStation') {
+    await this.connection.connect(orgConfigs[org]);
+  }
 
-    async initCandidates(candidates: { id: string; name: string }[]) {
-        const contract = this.connection.getContract();
-        await contract.submitTransaction('InitCandidates', JSON.stringify(candidates));
-    }
+  async createElection(
+    electionId: string,
+    name: string,
+    description: string,
+    startDate: string,
+    endDate: string,
+  ): Promise<void> {
+    const contract = this.connection.getContract();
 
-    async registerVoter(voterId: string) {
-        const contract = this.connection.getContract();
-        await contract.submitTransaction('RegisterVoter', voterId);
-    }
+    await contract.submitTransaction(
+      'CreateElection',
+      electionId,
+      name,
+      description,
+      startDate,
+      endDate,
+    );
+  }
 
-    async castVote(voterId: string, candidateId: string) {
-        const contract = this.connection.getContract();
-        await contract.submitTransaction('CastVote', voterId, candidateId);
-    }
+  async addCandidate(
+    electionId: string,
+    candidateId: string,
+    name: string,
+    affiliation: string,
+  ): Promise<void> {
+    const contract = this.connection.getContract();
 
-    async getResults(): Promise<unknown> {
-        const contract = this.connection.getContract();
-        const resultBytes = await contract.evaluateTransaction('GetResults');
-        return JSON.parse(Buffer.from(resultBytes).toString('utf8'));
-    }
+    await contract.submitTransaction(
+      'AddCandidate',
+      electionId,
+      candidateId,
+      name,
+      affiliation,
+    );
+  }
 
-    close() {
-        this.connection.close();
-    }
+  async getAllElections(): Promise<unknown> {
+    const contract = this.connection.getContract();
+
+    const resultBytes =
+      await contract.evaluateTransaction('GetAllElections');
+
+    return JSON.parse(Buffer.from(resultBytes).toString('utf8'));
+  }
+
+  async castVote(
+    electionId: string,
+    candidateId: string,
+    proof: string,
+  ): Promise<void> {
+    const contract = this.connection.getContract();
+
+    await contract.submitTransaction(
+      'CastVote',
+      electionId,
+      candidateId,
+      proof,
+    );
+  }
+
+  async getCandidates(electionId: string): Promise<unknown> {
+    const contract = this.connection.getContract();
+
+    const resultBytes =
+      await contract.evaluateTransaction(
+        'GetCandidates',
+        electionId,
+      );
+
+    return JSON.parse(Buffer.from(resultBytes).toString('utf8'));
+  }
+
+  async getResults(electionId: string): Promise<unknown> {
+    const contract = this.connection.getContract();
+
+    const resultBytes =
+      await contract.evaluateTransaction(
+        'GetResults',
+        electionId,
+      );
+
+    return JSON.parse(Buffer.from(resultBytes).toString('utf8'));
+  }
+
+  close() {
+    this.connection.close();
+  }
 }

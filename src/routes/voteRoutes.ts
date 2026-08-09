@@ -1,63 +1,34 @@
 // src/routes/voteRoutes.ts
-import { Router, Request, Response } from 'express';
-import { VoteService } from '../services/voteService';
 
-const router = Router();
-const voteService = new VoteService();
+import { Router } from 'express';
 
-let initialized = false;
-async function ensureInit() {
-    if (!initialized) {
-        await voteService.init('org1');
-        initialized = true;
-    }
-}
+import {
+  createElection,
+  addCandidate,
+  getAllElections,
+  getCandidates,
+  castVote,
+  getResults,
+} from '../controllers/vote.controller';
 
-router.post('/candidates', async (req: Request, res: Response) => {
-    try {
-        await ensureInit();
-        await voteService.initCandidates(req.body.candidates);
-        res.status(201).json({ message: 'Candidates initialized' });
-    } catch (err: any) {
-        res.status(500).json({ error: err.message });
-    }
-});
+const voteRoutes= Router();
 
-router.post('/voters/:voterId', async (req: Request, res: Response) => {
-    try {
-        const { voterId } = req.params;
+voteRoutes.post('/elections', createElection);
 
-        if (typeof voterId !== 'string' || !voterId) {
-            return res.status(400).json({ error: 'voterId is required' });
-        }
+voteRoutes.get('/elections', getAllElections);
 
-        await ensureInit();
-        await voteService.registerVoter(voterId);
-        res.status(201).json({ message: 'Voter registered' });
-    } catch (err: any) {
-        res.status(400).json({ error: err.message });
-    }
-});
+voteRoutes.post('/candidates', addCandidate);
 
-router.post('/vote', async (req: Request, res: Response) => {
-    try {
-        await ensureInit();
-        const { voterId, candidateId } = req.body;
-        await voteService.castVote(voterId, candidateId);
-        res.status(200).json({ message: 'Vote cast successfully' });
-    } catch (err: any) {
-        res.status(400).json({ error: err.message });
-    }
-});
+voteRoutes.get(
+  '/elections/:electionId/candidates',
+  getCandidates,
+);
 
-router.get('/results', async (req: Request, res: Response) => {
-    try {
-        await ensureInit();
-        const results = await voteService.getResults();
-        res.status(200).json(results);
-    } catch (err: any) {
-        res.status(500).json({ error: err.message });
-    }
-});
+voteRoutes.post('/votes', castVote);
 
-export default router;
+voteRoutes.get(
+  '/elections/:electionId/results',
+  getResults,
+);
+
+export default voteRoutes;
