@@ -114,16 +114,7 @@ export const loginUser = async (
         message: 'Invalid email or password',
       });
       return;
-    }
-
-    // Optional: block login until email is verified
-    if (!user.isVerified) {
-      res.status(403).json({
-        success: false,
-        message: 'Please verify your email before logging in',
-      });
-      return;
-    }
+    } 
 
     const jwtToken = signToken({
       userId: user.userId,
