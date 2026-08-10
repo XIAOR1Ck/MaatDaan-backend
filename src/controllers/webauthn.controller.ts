@@ -37,10 +37,10 @@ const userId = req.user.userId;
       });
       return;
     }
-
+console.log("registration userId: ", user.userId);
     const options = await webauthnService.getRegistrationOptions(user.userId, user.email);
     const pendingToken = jwt.sign(
-  { userId: user.id, purpose: 'webauthn-register' },
+  { userId: user.userId, purpose: 'webauthn-register' },
   process.env.JWT_SECRET!,
   { expiresIn: '2m' }
 );
@@ -56,7 +56,10 @@ export async function registerVerify(req: Request, res: Response) {
     const { pendingToken, response} = req.body;
     let payload;
 try {
+console.log("pending Token: ", pendingToken);
   payload = jwt.verify(pendingToken, process.env.JWT_SECRET!) as { userId: string; purpose: string };
+console.log("payload: ", payload);
+console.log("payload user id: ", payload.userId);
 } catch {
   return res.status(400).json({ error: 'Invalid or expired registration token' });
 }
@@ -76,27 +79,19 @@ if (payload.purpose !== 'webauthn-register') {
 export async function loginOptions(req: Request, res: Response) {
   try {
     if (!req.user) {
-  return res.status(401).json({
-    success: false,
-    message: "Unauthorized",
-  });
-}
-
-const userId = req.user.userId;
-    const user = User.findByPk(userId);
-    if (!user || !userId) {
+      return res.status(401).json({ success: false, message: "Unauthorized" });
+    }
+    const userId = req.user.userId;
+    if (!userId) {
       return res.status(400).json({ error: 'user not found' });
     }
-
-    const { options } = await webauthnService.getAuthenticationOptions(userId);
+    const { options, userId: resolvedUserId } = await webauthnService.getAuthenticationOptions(userId);
     const pendingToken = jwt.sign(
-  { userId: userId, purpose: 'webauthn-login' },
-  process.env.JWT_SECRET!,
-  { expiresIn: '2m' }
-);
-
-
-    res.json({options, pendingToken});
+      { userId: resolvedUserId, purpose: 'webauthn-login' },
+      process.env.JWT_SECRET!,
+      { expiresIn: '2m' }
+    );
+    res.json({ options, pendingToken });
   } catch (err) {
     res.status(400).json({ error: errorMessage(err) });
   }

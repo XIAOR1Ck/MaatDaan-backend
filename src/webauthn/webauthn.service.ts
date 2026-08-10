@@ -38,24 +38,25 @@ export async function getRegistrationOptions(userId: string, username: string) {
   const existingCredentials = await UserWebAuthn.findAll({ where: { userId } });
 
   const options = await generateRegistrationOptions({
-    rpName,
-    rpID,
-    // The WebAuthn "user handle" — does not need to equal your DB id format,
-    // but must be stable for this user and <= 64 bytes.
-    userID: new TextEncoder().encode(userId),
-    userName: username,
-    attestationType: 'none',
-    excludeCredentials: existingCredentials.map((cred: any) => ({
-      id: cred.credentialId,
-      transports: (cred.transports as AuthenticatorTransportFuture[]) || undefined,
-    })),
-    authenticatorSelection: {
-      residentKey: 'preferred',
-      userVerification: 'preferred',
-    },
-  } as GenerateRegistrationOptionsOpts);
-
-  await setChallenge(userId, options.challenge);
+  rpName,
+  rpID,
+  userID: new TextEncoder().encode(userId),
+  userName: username,
+  // Chrome has a known bug where an empty user.displayName causes
+  // registration to fail with a confusing error — always fall back
+  // to the username instead of letting this default to "".
+  userDisplayName: username,
+  attestationType: 'none',
+  excludeCredentials: existingCredentials.map((cred: any) => ({
+    id: cred.credentialId,
+    transports: (cred.transports as AuthenticatorTransportFuture[]) || undefined,
+  })),
+  authenticatorSelection: {
+    residentKey: 'preferred',
+    userVerification: 'preferred',
+  },
+} as GenerateRegistrationOptionsOpts);
+await setChallenge(userId, options.challenge);
   return options;
 }
 
@@ -96,13 +97,13 @@ export async function verifyRegistration(
 
 // Authentication
 //
-export async function getAuthenticationOptions(username: string) {
-  const user = await User.findOne({ where: { username } });
+export async function getAuthenticationOptions(userId: string) {
+  const user = await User.findByPk(userId);
   if (!user) {
     throw new Error('User not found');
   }
 
-  const credentials = await UserWebAuthn.findAll({ where: { userId: user.id } });
+  const credentials = await UserWebAuthn.findAll({ where: { userId: user.userId } });
   if (credentials.length === 0) {
     throw new Error('No passkeys registered for this user');
   }
@@ -116,8 +117,8 @@ export async function getAuthenticationOptions(username: string) {
     })),
   } as GenerateAuthenticationOptionsOpts);
 
-  await setChallenge(user.id, options.challenge);
-  return { options, userId: user.id as string };
+  await setChallenge(user.userId, options.challenge);
+  return { options, userId: user.userId as string };
 }
 
 export async function verifyAuthentication(

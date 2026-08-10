@@ -1,11 +1,18 @@
-import db from "../models";
 
-const { Users } = db as any;
+export type Role = "user" | "admin";
+
+
+interface AuthUser {
+  userId: string;
+  email: string;
+  name?: string;
+  role: Role;
+}
 
 declare global {
   namespace Express {
     interface Request {
-      user?: Users;
+      user?: AuthUser;
     }
   }
 }

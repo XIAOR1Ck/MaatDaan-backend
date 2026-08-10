@@ -1,8 +1,8 @@
 import db from '../models';
 import { verifyToken } from '../utils/generateToken';
 import { Request, Response, NextFunction } from 'express';
-
-const { User } = db as any;
+const { User, Admin } = db as any;
+import { Role } from '../types/express'
 
 
 const protect = async (
@@ -21,10 +21,29 @@ next: NextFunction) => {
     console.log(decoded);
     
     if (decoded.role === "user") {
-      req.user = await User.findByPk(decoded.userId, {
+     const user = await User.findByPk(decoded.userId, {
   attributes: { exclude: ['password']}
 });
-    }
+req.user = {
+userId: user.userId,
+name: user.name,
+email: user.email,
+role: "user"
+}
+
+    } else if (decoded.role == "admin") {
+      const admin = await Admin.findByPk(decoded.userId, {
+  attributes: { exclude: ['password']}
+});
+
+req.user = {
+userId: admin.userId,
+name: admin.name,
+email: admin.email,
+role: "user"
+}
+
+}
     if (!req.user) {
       return res.status(401).json({ message: "User not found" });
     }
@@ -40,4 +59,22 @@ next: NextFunction) => {
   }
 };
 
-export {protect};
+
+const authorize = (...roles: Role[]) => {
+  return (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
+    if (!req.user || !roles.includes(req.user.role)) {
+      return res.status(403).json({
+        success: false,
+        message: `Access denied. Required role: ${roles.join(" or ")}`,
+      });
+    }
+
+    next();
+  };
+};
+
+export {protect,  authorize};

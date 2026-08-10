@@ -3,7 +3,7 @@ import bcrypt from 'bcrypt';
 import crypto from 'crypto';
 import { signToken } from '../utils/generateToken';
 import * as db from '../models';
-const { User , EmailVerification } = db as any;
+const { User , EmailVerification, Admin } = db as any;
 
 export const createUser = async (
   req: Request,
@@ -138,6 +138,124 @@ export const loginUser = async (
     res.status(500).json({
       success: false,
       message: 'Failed to log in',
+    });
+  }
+};
+
+export const createAdmin = async (
+req: Request,
+res: Response
+) => {
+  try {
+    const { email, password } = req.body;
+
+    // Validate input
+    if (!email || !password) {
+      return res.status(400).json({
+        success: false,
+        message: "Email and password are required",
+      });
+    }
+
+    // Check if admin already exists
+    const existingAdmin = await Admin.findOne({
+      where: { email },
+    });
+
+    if (existingAdmin) {
+      return res.status(409).json({
+        success: false,
+        message: "Admin with this email already exists",
+      });
+    }
+
+    // Hash password
+    const hashedPassword = await bcrypt.hash(password, 12);
+
+    // Create admin
+    const admin = await Admin.create({
+      email,
+      password: hashedPassword,
+    });
+const jwtToken = signToken({userId: admin.adminId, email: admin.email, role: "user"});
+
+    return res.status(201).json({
+      success: true,
+      message: "Admin created successfully",
+      token: jwtToken,
+      data: {
+        adminId: admin.adminId,
+        email: admin.email,
+        role: "admin"
+      },
+    });
+  } catch (error) {
+    console.error("Create admin error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Failed to create admin",
+    });
+  }
+};
+
+export const loginAdmin = async (
+req: Request,
+res: Response
+) => {
+  try {
+    const { email, password } = req.body;
+
+    // Validate input
+    if (!email || !password) {
+      return res.status(400).json({
+        success: false,
+        message: "Email and password are required",
+      });
+    }
+
+    // Find admin
+    const admin = await Admin.findOne({
+      where: { email },
+    });
+
+    if (!admin) {
+      return res.status(401).json({
+        success: false,
+        message: "Invalid email or password",
+      });
+    }
+
+    // Verify password
+    const passwordValid = await bcrypt.compare(
+      password,
+      admin.password
+    );
+
+    if (!passwordValid) {
+      return res.status(401).json({
+        success: false,
+        message: "Invalid email or password",
+      });
+    }
+
+    const token = signToken({userId: admin.adminId, email: admin.email, role: "admin"});
+    return res.status(200).json({
+      success: true,
+      message: "Admin login successful",
+      data: {
+        adminId: admin.adminId,
+        email: admin.email,
+        role: "admin"
+      },
+      token,
+    });
+  } catch (error) {
+    console.error("Admin login error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Failed to login",
     });
   }
 };

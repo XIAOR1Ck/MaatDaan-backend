@@ -1,8 +1,6 @@
 import express from "express";
 import 'dotenv/config';
 import cors from "cors";
-import { voteService } from "./fabric";
-import voteRoutes from "./routes/vote.routes";
 import authRoutes from "./routes/auth.routes";
 import mailRouter from "./routes/mail.routes";
 import webauthnRouter from "./routes/webauthn.routes";
@@ -20,7 +18,6 @@ credentials: true,
 
 // voting routes
 //
-app.use('/api/votes', voteRoutes);
 
 //Auth Routes
 app.use('/api/auth', authRoutes);
@@ -42,18 +39,12 @@ app.use('/api/webauthn/', webauthnRouter);
 
 async function startServer() {
   try {
-    await voteService.init('pollingStation');
-
-    console.log('Connected to Hyperledger Fabric');
-
-    const server = app.listen(process.env.APP_PORT, () => {
+       const server = app.listen(process.env.APP_PORT, () => {
       console.log(`Server running on port ${process.env.APP_PORT}`);
     });
 
     const shutdown = () => {
       console.log('Shutting down...');
-
-      voteService.close();
 
       server.close(() => {
         process.exit(0);
