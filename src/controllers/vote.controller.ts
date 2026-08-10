@@ -1,7 +1,7 @@
 // src/controllers/voteController.ts
 
 import { Request, Response } from 'express';
-import { voteService } from '../services';
+import { voteService } from '../fabric';
 
 // createElection conreoller
 export const createElection = async (

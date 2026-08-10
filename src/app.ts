@@ -1,7 +1,7 @@
 import express from "express";
 import 'dotenv/config';
 import cors from "cors";
-import { voteService } from "./services";
+import { voteService } from "./fabric";
 import voteRoutes from "./routes/vote.routes";
 import authRoutes from "./routes/auth.routes";
 import mailRouter from "./routes/mail.routes";
