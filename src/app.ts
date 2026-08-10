@@ -5,6 +5,7 @@ import { voteService } from "./fabric";
 import voteRoutes from "./routes/vote.routes";
 import authRoutes from "./routes/auth.routes";
 import mailRouter from "./routes/mail.routes";
+import webauthnRouter from "./routes/webauthn.routes";
 
 const app = express();
 
@@ -34,6 +35,9 @@ app.get("/", (_req, res) => {
 
 //MailRouter for test
 app.use('/api/mail', mailRouter);
+
+// WebAuth Routs
+app.use('/api/webauthn/', webauthnRouter);
 
 
 async function startServer() {
