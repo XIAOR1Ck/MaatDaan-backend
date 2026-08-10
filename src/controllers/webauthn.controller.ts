@@ -26,7 +26,10 @@ const userId = req.user.userId;
 
     // Demo behavior: find or create the user by username.
     // Swap this for your real signup/auth flow as needed.
-    const [user] = await User.findOne({ where: { userId } });
+    const user = await User.findByPk(userId, {
+  attributes: { exclude: ['password']}
+});
+
   if (!user) {
       res.status(401).json({
         success: false,
