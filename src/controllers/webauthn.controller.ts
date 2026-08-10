@@ -12,7 +12,14 @@ function errorMessage(err: unknown): string {
 
 export async function registerOptions(req: Request, res: Response) {
   try {
-    const { userId } = req.body.user as { userId?: string };
+    if (!req.user) {
+  return res.status(401).json({
+    success: false,
+    message: "Unauthorized",
+  });
+}
+
+const userId = req.user.userId;
     if (!userId) {
       return res.status(400).json({ error: 'username is required' });
     }
@@ -65,7 +72,14 @@ if (payload.purpose !== 'webauthn-register') {
 
 export async function loginOptions(req: Request, res: Response) {
   try {
-    const { userId } = req.body.user as { userId?: string };
+    if (!req.user) {
+  return res.status(401).json({
+    success: false,
+    message: "Unauthorized",
+  });
+}
+
+const userId = req.user.userId;
     const user = User.findByPk(userId);
     if (!user || !userId) {
       return res.status(400).json({ error: 'user not found' });
