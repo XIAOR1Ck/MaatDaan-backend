@@ -3,7 +3,7 @@ import * as webauthnService from '../webauthn/webauthn.service';
 import db from '../models';
 import jwt from 'jsonwebtoken';
 
-const { Users } = db as any;
+const { User } = db as any;
 
 
 function errorMessage(err: unknown): string {
@@ -19,7 +19,7 @@ export async function registerOptions(req: Request, res: Response) {
 
     // Demo behavior: find or create the user by username.
     // Swap this for your real signup/auth flow as needed.
-    const [user] = await Users.findOne({ where: { userId } });
+    const [user] = await User.findOne({ where: { userId } });
   if (!user) {
       res.status(401).json({
         success: false,
@@ -66,7 +66,8 @@ if (payload.purpose !== 'webauthn-register') {
 export async function loginOptions(req: Request, res: Response) {
   try {
     const { userId } = req.body.user as { userId?: string };
-    if (!userId) {
+    const user = User.findByPk(userId);
+    if (!user || !userId) {
       return res.status(400).json({ error: 'user not found' });
     }
 

@@ -22,7 +22,7 @@ import { rpName, rpID, origin } from './webauthn.config';
 
 import db from '../models';
 
-const { Users, UserWebAuthn } = db as any;
+const { User, UserWebAuthn } = db as any;
 
 // Convert bytes returned by @simplewebauthn into a base64url string for TEXT storage
 function uint8ToBase64url(bytes: Uint8Array): string {
@@ -97,7 +97,7 @@ export async function verifyRegistration(
 // Authentication
 //
 export async function getAuthenticationOptions(username: string) {
-  const user = await Users.findOne({ where: { username } });
+  const user = await User.findOne({ where: { username } });
   if (!user) {
     throw new Error('User not found');
   }
