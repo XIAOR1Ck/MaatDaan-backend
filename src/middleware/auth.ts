@@ -20,8 +20,7 @@ next: NextFunction) => {
     const decoded = verifyToken(token);
     
     if (decoded.role === "user") {
-      req.user = await Users.findOne({
-  where: {userId: decoded.userId},
+      req.user = await Users.findByPk(decoded.userId, {
   attributes: { exclude: ['password']}
 });
     }
