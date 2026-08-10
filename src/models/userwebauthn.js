@@ -44,7 +44,7 @@ module.exports = (sequelize, DataTypes) => {
     {
       sequelize,
       modelName: 'UserWebAuthn',
-      tableName: 'UserWebAuthns',
+      tableName: 'WebAuthnCredentials',
     }
   );
 

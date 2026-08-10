@@ -38,7 +38,7 @@ const userId = req.user.userId;
       return;
     }
 
-    const options = await webauthnService.getRegistrationOptions(user.id, userId);
+    const options = await webauthnService.getRegistrationOptions(user.userId, user.email);
     const pendingToken = jwt.sign(
   { userId: user.id, purpose: 'webauthn-register' },
   process.env.JWT_SECRET!,
