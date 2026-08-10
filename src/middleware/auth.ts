@@ -2,7 +2,7 @@ import db from '../models';
 import { verifyToken } from '../utils/generateToken';
 import { Request, Response, NextFunction } from 'express';
 
-const { Users } = db as any;
+const { User } = db as any;
 
 
 const protect = async (
@@ -21,7 +21,7 @@ next: NextFunction) => {
     console.log(decoded);
     
     if (decoded.role === "user") {
-      req.user = await Users.findByPk(decoded.userId, {
+      req.user = await User.findByPk(decoded.userId, {
   attributes: { exclude: ['password']}
 });
     }
