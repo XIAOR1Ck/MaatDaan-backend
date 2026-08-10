@@ -18,6 +18,7 @@ next: NextFunction) => {
 
     const token = authHeader.split(" ")[1];
     const decoded = verifyToken(token);
+    console.log(decoded);
     
     if (decoded.role === "user") {
       req.user = await Users.findByPk(decoded.userId, {
@@ -30,7 +31,12 @@ next: NextFunction) => {
 
     next();
   } catch (error) {
-    return res.status(401).json({ message: "Token is invalid or expired" });
+    console.error("Protect middleware error:", error);
+
+  return res.status(401).json({
+    message: "Authentication failed",
+    error: error instanceof Error ? error.message : error,
+  });
   }
 };
 
