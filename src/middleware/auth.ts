@@ -31,16 +31,15 @@ email: user.email,
 role: "user"
 }
 
-    } else if (decoded.role == "admin") {
+    } else if (decoded.role === "admin") {
       const admin = await Admin.findByPk(decoded.userId, {
   attributes: { exclude: ['password']}
 });
 
 req.user = {
-userId: admin.userId,
-name: admin.name,
+userId: admin.adminId,
 email: admin.email,
-role: "user"
+role: "admin"
 }
 
 }
@@ -66,6 +65,7 @@ const authorize = (...roles: Role[]) => {
     res: Response,
     next: NextFunction
   ) => {
+    console.log("authorize field, user: ", req.user);
     if (!req.user || !roles.includes(req.user.role)) {
       return res.status(403).json({
         success: false,

@@ -7,6 +7,7 @@ interface AuthUser {
   email: string;
   name?: string;
   role: Role;
+  isVerified?: boolean
 }
 
 declare global {

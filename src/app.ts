@@ -4,6 +4,8 @@ import cors from "cors";
 import authRoutes from "./routes/auth.routes";
 import mailRouter from "./routes/mail.routes";
 import webauthnRouter from "./routes/webauthn.routes";
+import voteRouter from "./routes/vote.routes";
+import adminRouter from "./routes/admin.routes";
 
 const app = express();
 
@@ -35,6 +37,11 @@ app.use('/api/mail', mailRouter);
 
 // WebAuth Routs
 app.use('/api/webauthn/', webauthnRouter);
+app.use('/api/vote', voteRouter);
+
+
+//admin routes
+app.use('/api/admin', adminRouter);
 
 
 async function startServer() {

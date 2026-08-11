@@ -1,241 +1,166 @@
-// src/controllers/voteController.ts
-
 import { Request, Response } from 'express';
-import { voteService } from '../fabric';
+import { voteService, GatewayError } from '../gateway/fabric.gateway';
+import crypto from 'crypto';
 
-// createElection conreoller
+function handleGatewayError(res: Response, action: string, error: unknown): void {
+  console.error(`${action} error:`, error);
+
+  const status = error instanceof GatewayError ? (error.status ?? 500) : 500;
+
+  res.status(status).json({
+    success: false,
+    message: `Failed to ${action.toLowerCase()}`,
+    error: error instanceof Error ? error.message : String(error),
+  });
+}
+
 export const createElection = async (
   req: Request,
   res: Response,
-) => {
+): Promise<void> => {
   try {
-    const {
-      electionId,
-      name,
-      description,
-      startDate,
-      endDate,
-    } = req.body;
+    const {name, description, startDate, endDate } = req.body;
 
-    if (
-      !electionId ||
-      !name ||
-      !description ||
-      !startDate ||
-      !endDate
-    ) {
-      return res.status(400).json({
+    if (!name || !description || !startDate || !endDate) {
+      res.status(400).json({
         success: false,
         message: 'All election fields are required',
       });
+      return;
     }
+  const electionId = crypto.randomUUID();
 
-    await voteService.createElection(
-      electionId,
-      name,
-      description,
-      startDate,
-      endDate,
-    );
+    await voteService.createElection(electionId, name, description, startDate, endDate);
 
-    return res.status(201).json({
+    res.status(201).json({
       success: true,
       message: 'Election created successfully',
-      data: {
-        electionId,
-      },
     });
   } catch (error) {
-    console.error('Create election error:', error);
-
-    return res.status(500).json({
-      success: false,
-      message: 'Failed to create election',
-      error: error instanceof Error ? error.message : 'Unknown error',
-    });
+    handleGatewayError(res, 'Create election', error);
   }
 };
 
-
-//Add candidate
 export const addCandidate = async (
   req: Request,
   res: Response,
-) => {
+): Promise<void> => {
   try {
-    const {
-      electionId,
-      candidateId,
-      name,
-      affiliation,
-    } = req.body;
+    const { electionId, name, affiliation } = req.body;
 
-    if (
-      !electionId ||
-      !candidateId ||
-      !name ||
-      !affiliation
-    ) {
-      return res.status(400).json({
+    if (!electionId || !name || !affiliation) {
+      res.status(400).json({
         success: false,
         message: 'All candidate fields are required',
       });
+      return;
     }
+    const candidateId = crypto.randomUUID();
+    await voteService.addCandidate(electionId, candidateId, name, affiliation);
 
-    await voteService.addCandidate(
-      electionId,
-      candidateId,
-      name,
-      affiliation,
-    );
-
-    return res.status(201).json({
+    res.status(201).json({
       success: true,
       message: 'Candidate added successfully',
-      data: {
-        electionId,
-        candidateId,
-      },
     });
   } catch (error) {
-    console.error('Add candidate error:', error);
-
-    return res.status(500).json({
-      success: false,
-      message: 'Failed to add candidate',
-      error: error instanceof Error ? error.message : 'Unknown error',
-    });
+    handleGatewayError(res, 'Add candidate', error);
   }
 };
 
-// get election route
-//
 export const getAllElections = async (
-  req: Request,
+  _req: Request,
   res: Response,
-) => {
+): Promise<void> => {
   try {
+    // Typed as Election[] — autocompletes electionId, name, description, etc.
     const elections = await voteService.getAllElections();
 
-    return res.status(200).json({
+    res.status(200).json({
       success: true,
       data: elections,
     });
   } catch (error) {
-    console.error('Get elections error:', error);
-
-    return res.status(500).json({
-      success: false,
-      message: 'Failed to retrieve elections',
-      error: error instanceof Error ? error.message : 'Unknown error',
-    });
+    handleGatewayError(res, 'Get elections', error);
   }
 };
 
-//Get Candidates route
-//
 export const getCandidates = async (
-  req: Request<{electionId: string}>,
+  req: Request,
   res: Response,
-) => {
+): Promise<void> => {
   try {
     const { electionId } = req.params;
 
     if (!electionId) {
-      return res.status(400).json({
+      res.status(400).json({
         success: false,
         message: 'Election ID is required',
       });
+      return;
     }
 
-    const candidates =
-      await voteService.getCandidates(electionId);
+    const candidates = await voteService.getCandidates(electionId as string);
 
-    return res.status(200).json({
+    res.status(200).json({
       success: true,
       data: candidates,
     });
   } catch (error) {
-    console.error('Get candidates error:', error);
-
-    return res.status(500).json({
-      success: false,
-      message: 'Failed to retrieve candidates',
-      error: error instanceof Error ? error.message : 'Unknown error',
-    });
+    handleGatewayError(res, 'Get candidates', error);
   }
 };
 
-//Cast Vote
-//
 export const castVote = async (
   req: Request,
   res: Response,
-) => {
+): Promise<void> => {
   try {
-    const {
-      electionId,
-      candidateId,
-      proof,
-    } = req.body;
+    const { electionId, candidateId } = req.body;
 
-    if (!electionId || !candidateId || !proof) {
-      return res.status(400).json({
+    if (!electionId || !candidateId ) {
+      res.status(400).json({
         success: false,
         message: 'Election ID, candidate ID and proof are required',
       });
+      return;
     }
+const combined = process.env.SERVER_PROOF_HASH + electionId + candidateId;
 
-    await voteService.castVote(
-      electionId,
-      candidateId,
-      proof,
-    );
+const proof = crypto.createHash('sha256').update(combined).digest('hex');
 
-    return res.status(201).json({
+    await voteService.castVote(electionId, candidateId, proof);
+
+    res.status(201).json({
       success: true,
       message: 'Vote cast successfully',
     });
   } catch (error) {
-    console.error('Cast vote error:', error);
-
-    return res.status(500).json({
-      success: false,
-      message: 'Failed to cast vote',
-      error: error instanceof Error ? error.message : 'Unknown error',
-    });
+    handleGatewayError(res, 'Cast vote', error);
   }
 };
 
-// Get Results
-//
 export const getResults = async (
-  req: Request<{electionId: string}>,
+  req: Request,
   res: Response,
-) => {
+): Promise<void> => {
   try {
     const { electionId } = req.params;
 
     if (!electionId) {
-      return res.status(400).json({
+      res.status(400).json({
         success: false,
         message: 'Election ID is required',
       });
+      return;
     }
 
-    const results = await voteService.getResults(electionId);
+    const results = await voteService.getResults(electionId as string);
 
-    return res.status(200).json({
+    res.status(200).json({
       success: true,
       data: results,
     });
   } catch (error) {
-    console.error('Get results error:', error);
-
-    return res.status(500).json({
-      success: false,
-      message: 'Failed to retrieve election results',
-      error: error instanceof Error ? error.message : 'Unknown error',
-    });
+    handleGatewayError(res, 'Get results', error);
   }
 };
